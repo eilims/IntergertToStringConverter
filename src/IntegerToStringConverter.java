@@ -1,6 +1,7 @@
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 
 
@@ -51,7 +52,7 @@ public class IntegerToStringConverter {
         words.put(60, "sixty ");
         words.put(70, "seventy ");
         words.put(80, "eighty ");
-        words.put(90, "ninty ");
+        words.put(90, "ninety ");
         // Keys are placeholders unlike previous entries
         words.put(100, "hundred ");
         words.put(200, "thousand ");
@@ -61,32 +62,31 @@ public class IntegerToStringConverter {
 
 
     public String parse(int value) {
-        ArrayList<Integer> digits = new ArrayList();
         //Determine number of digits and sort digits into list
-        digitParse(value, digits);
+        ArrayList<Triplet> list = digitParse(value);
         //TODO add string to output
-        return wordParse(digits);
+        return wordParse(list);
     }
 
 
-    public void digitParse(int value, ArrayList<Integer> digits) {
+    public ArrayList<Triplet> digitParse(int value) {
+        ArrayList<Triplet> list = new ArrayList<>();
         int count = 0;
-        boolean isParsed = false;
-        while (value != 0 || !isParsed) {
-            if (count != 1) {
-                digits.add(value % 10);
-            } else {
-                digits.add((value % 10) * 10);
-            }
-            isParsed = true;
+        boolean isTripletFull = false;
+        Triplet triplet = new Triplet(0);
+        do {
+            isTripletFull = triplet.addNextDigit(value % 10);
             value = value / 10;
-            count++;
-            count = count % 3;
-        }
+            if (isTripletFull || value == 0) {
+                list.add(triplet);
+                triplet = new Triplet(count++);
+            }
+        } while (value != 0);
+        return list;
     }
 
 
-    public String wordParse(ArrayList<Integer> digits) {
+    public String wordParse(List<Triplet> digits) {
         StringBuilder builder = new StringBuilder();
         int count = 0;
         boolean isAllZero = false;
@@ -128,7 +128,7 @@ public class IntegerToStringConverter {
 
             } else {
                 //Triplet contains one digit
-                if (digits.get(index) != 0 || index - 2 == 0) {
+                if (digits.get(index) != 0 || index == 0) {
                     tripletIsAllZero = false;
                     builder.append(words.get(digits.get(index)));
                 }
@@ -139,7 +139,6 @@ public class IntegerToStringConverter {
                 appendPlace(count, digits.size(), builder);
             }
             count++;
-
             //Ensure that following numbers are not all zero, breakout if this is the case
             isAllZero = true;
             for (int i = index - 1; i >= 0; i--) {
