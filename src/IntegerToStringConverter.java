@@ -12,9 +12,18 @@ public class IntegerToStringConverter {
         Scanner scan = new Scanner(System.in);
         IntegerToStringConverter intToString = new IntegerToStringConverter();
         System.out.println("Please enter a number");
-        //TODO add try/catch support
-        //TODO add limit for number size
-        String output = intToString.parse(scan.nextInt());
+        boolean isInputValid = false;
+        int value = 0;
+        while (!isInputValid) {
+            String input = scan.nextLine();
+            try {
+                value = Integer.parseInt(input);
+                isInputValid = true;
+            } catch (Exception e) {
+                System.out.println("Please enter a valid number");
+            }
+        }
+        String output = intToString.parse(value);
         System.out.println("The string format of the number is: " + output);
     }
 
@@ -30,6 +39,7 @@ public class IntegerToStringConverter {
         words.put(6, "six ");
         words.put(7, "seven ");
         words.put(8, "eight ");
+        words.put(9, "nine ");
         words.put(10, "ten ");
         words.put(11, "eleven ");
         words.put(12, "twelve ");
@@ -58,13 +68,14 @@ public class IntegerToStringConverter {
 
     public String parse(int value) {
         //Determine number of digits and sort digits into triplets
-        ArrayList<Triplet> triplets = digitParse(value);
+        ArrayList<Triplet> triplets = tripletParse(value);
         //TODO add string to output
         return wordParse(triplets);
     }
 
 
-    public ArrayList<Triplet> digitParse(int value) {
+    //Parses digits into triplets
+    public ArrayList<Triplet> tripletParse(int value) {
         ArrayList<Triplet> triplets = new ArrayList<>();
         int count = 0;
         boolean isTripletFull = false;
@@ -78,11 +89,13 @@ public class IntegerToStringConverter {
                 triplet = new Triplet(count);
             }
         } while (value != 0);
+        //Reverse order for easier StringBuilder appending
         Collections.reverse(triplets);
         return triplets;
     }
 
-
+    //Parse triplet data into string
+    //Returns completed string
     public String wordParse(List<Triplet> triplets) {
         StringBuilder builder = new StringBuilder();
         for (Triplet triplet : triplets) {
@@ -91,6 +104,7 @@ public class IntegerToStringConverter {
                     builder.append(words.get(triplet.getDigitZero()));
                     break;
                 case 2:
+                    builder.append(appendAnd(triplet));
                     builder.append(appendTwoDigits(triplet));
                     break;
                 case 3:
@@ -102,14 +116,13 @@ public class IntegerToStringConverter {
         return builder.toString();
     }
 
+    //Used if a triplet contains three digits
     public String appendThreeDigits(Triplet triplet) {
         StringBuilder builder = new StringBuilder();
         if (!isZero(triplet.getDigitTwo())) {
             builder.append(words.get(triplet.getDigitTwo()));
+            //If digit two is present in any place hundred must be appended
             builder.append(words.get(100));
-            if ((!isZero(triplet.getDigitOne()) || !isZero(triplet.getDigitZero())) && isZero(triplet.getPlace())) {
-                builder.append("and ");
-            }
             builder.append(appendTwoDigits(triplet));
         } else {
             builder.append(appendTwoDigits(triplet));
@@ -117,9 +130,12 @@ public class IntegerToStringConverter {
         return builder.toString();
     }
 
+    //Used if a triplet contains two or more digits
     public String appendTwoDigits(Triplet triplet) {
         StringBuilder builder = new StringBuilder();
         if (!isZero(triplet.getDigitOne())) {
+            builder.append(appendAnd(triplet));
+            //Check if the triplet represents a "teen" number
             if (triplet.getDigitOne() == 1) {
                 builder.append(words.get((triplet.getDigitOne() * 10) + triplet.getDigitZero()));
             } else {
@@ -127,11 +143,13 @@ public class IntegerToStringConverter {
                 builder.append(appendOneDigit(triplet));
             }
         } else {
+            builder.append(appendAnd(triplet));
             builder.append(appendOneDigit(triplet));
         }
         return builder.toString();
     }
 
+    //Used if a triplet contains one or more digits
     public String appendOneDigit(Triplet triplet) {
         if (!isZero(triplet.getDigitZero())) {
             return words.get(triplet.getDigitZero());
@@ -140,6 +158,8 @@ public class IntegerToStringConverter {
 
     }
 
+    //Appends the place of the triplet
+    //IE Thousand, Million, or Billion
     public String appendPlace(Triplet triplet) {
         if (!isZero(triplet.getPlace()) && (!isZero(triplet.getDigitZero()) || !isZero(triplet.getDigitOne()) || !isZero(triplet.getDigitTwo()))) {
             return words.get((triplet.getPlace() + 1) * 100);
@@ -147,6 +167,15 @@ public class IntegerToStringConverter {
         return "";
     }
 
+    public String appendAnd(Triplet triplet) {
+        //To append an "and" triplet must have non-zero digit one and zero, and be in place 0
+        if ((!isZero(triplet.getDigitOne()) || !isZero(triplet.getDigitZero())) && isZero(triplet.getPlace()) && triplet.getDigitTwo() != null) {
+            return "and ";
+        }
+        return "";
+    }
+
+    //Helper method
     public boolean isZero(Integer digit) {
         if (digit == 0) {
             return true;

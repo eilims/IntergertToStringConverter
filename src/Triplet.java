@@ -1,9 +1,9 @@
 public class Triplet {
 
-    Integer digitZero;
-    Integer digitOne;
-    Integer digitTwo;
-    int place;
+    private Integer digitZero;
+    private Integer digitOne;
+    private Integer digitTwo;
+    private int place;
 
     //Triplet has one digit
     public Triplet(int place) {

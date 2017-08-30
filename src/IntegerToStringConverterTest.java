@@ -27,7 +27,15 @@ public class IntegerToStringConverterTest {
         assertEquals("fifteen ", this.test.parse(15));
         assertEquals("twenty two ", this.test.parse(22));
         assertEquals("one hundred ", this.test.parse(100));
+        assertEquals("one hundred and two ", this.test.parse(102));
         assertEquals("one hundred and twenty two ", this.test.parse(122));
+        assertEquals("one thousand and two ", this.test.parse(1002));
+        assertEquals("one thousand and twelve ", this.test.parse(1012));
+        assertEquals("one thousand and twenty two ", this.test.parse(1022));
+        assertEquals("one thousand two hundred and twenty two ", this.test.parse(1222));
+        assertEquals("twelve thousand two hundred and twenty two ", this.test.parse(12222));
+        assertEquals("twenty two thousand two hundred and twenty two ", this.test.parse(22222));
+        assertEquals("twelve thousand and two ", this.test.parse(12002));
         assertEquals("one hundred thousand five hundred ", this.test.parse(100500));
         assertEquals("twenty thousand five hundred ", this.test.parse(20500));
         assertEquals("one hundred twenty five thousand four hundred and twenty two ", this.test.parse(125422));
@@ -37,18 +45,7 @@ public class IntegerToStringConverterTest {
 
     @Test
     public void digitParse() throws Exception {
-        ArrayList<Integer> realList = new ArrayList<Integer>();
-        realList.add(5);
-        realList.add(20);
-        ArrayList<Integer> testList = new ArrayList<Integer>();
-        this.test.digitParse(25, testList);
-        assertEquals(realList, testList);
-        testList.clear();
-        realList.add(1);
-        realList.add(5);
-        realList.add(20);
-        this.test.digitParse(25125, testList);
-        assertEquals(realList, testList);
+
     }
 
     @Test
