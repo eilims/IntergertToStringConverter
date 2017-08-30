@@ -1,8 +1,4 @@
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 
 //This class converted the input, a integer number into its strong format.
@@ -11,7 +7,6 @@ import java.util.Scanner;
 public class IntegerToStringConverter {
 
     HashMap<Integer, String> words;
-
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
@@ -62,15 +57,15 @@ public class IntegerToStringConverter {
 
 
     public String parse(int value) {
-        //Determine number of digits and sort digits into list
-        ArrayList<Triplet> list = digitParse(value);
+        //Determine number of digits and sort digits into triplets
+        ArrayList<Triplet> triplets = digitParse(value);
         //TODO add string to output
-        return wordParse(list);
+        return wordParse(triplets);
     }
 
 
     public ArrayList<Triplet> digitParse(int value) {
-        ArrayList<Triplet> list = new ArrayList<>();
+        ArrayList<Triplet> triplets = new ArrayList<>();
         int count = 0;
         boolean isTripletFull = false;
         Triplet triplet = new Triplet(0);
@@ -78,106 +73,85 @@ public class IntegerToStringConverter {
             isTripletFull = triplet.addNextDigit(value % 10);
             value = value / 10;
             if (isTripletFull || value == 0) {
-                list.add(triplet);
-                triplet = new Triplet(count++);
+                count++;
+                triplets.add(triplets.size(), triplet);
+                triplet = new Triplet(count);
             }
         } while (value != 0);
-        return list;
+        Collections.reverse(triplets);
+        return triplets;
     }
 
 
-    public String wordParse(List<Triplet> digits) {
+    public String wordParse(List<Triplet> triplets) {
         StringBuilder builder = new StringBuilder();
-        int count = 0;
-        boolean isAllZero = false;
-
-        for (int index = digits.size() - 1; index >= 0 && !isAllZero; index--) {
-
-            boolean tripletIsAllZero = true;
-
-            //TODO clean up if statments IE digits.get calls
-
-            //Parse in Triplets I.E. 100,001 => 100 and 001
-            //Starting from most significant number
-            if (index % 3 == 2) {
-
-                //Triplet contains three digits
-                //Do not skip appending of tens and ones place due to zero
-                if (digits.get(index) != 0) {
-                    builder.append(words.get(digits.get(index)));
-                    builder.append(words.get(100));
-                    tripletIsAllZero = false;
-                }
-
-                //Append "and" only in last triplet if digits are not zero
-                if ((digits.get(index - 1) != 0 || digits.get(index - 2) != 0) && index - 2 == 0) {
-                    builder.append("and ");
-                }
-
-                appendTens(index - 1, digits, builder);
-                index = index - 2;
-
-            } else if (index % 3 == 1) {
-
-                //Triplet contains two digits
-                if ((digits.get(index) != 0 || digits.get(index - 1) != 0)) {
-                    tripletIsAllZero = false;
-                }
-                appendTens(index, digits, builder);
-                index = index - 1;
-
-            } else {
-                //Triplet contains one digit
-                if (digits.get(index) != 0 || index == 0) {
-                    tripletIsAllZero = false;
-                    builder.append(words.get(digits.get(index)));
-                }
+        for (Triplet triplet : triplets) {
+            switch (triplet.getDigitCount()) {
+                case 1:
+                    builder.append(words.get(triplet.getDigitZero()));
+                    break;
+                case 2:
+                    builder.append(appendTwoDigits(triplet));
+                    break;
+                case 3:
+                    builder.append(appendThreeDigits(triplet));
+                    break;
             }
-
-
-            if (index - 1 > 0 && !tripletIsAllZero) {
-                appendPlace(count, digits.size(), builder);
-            }
-            count++;
-            //Ensure that following numbers are not all zero, breakout if this is the case
-            isAllZero = true;
-            for (int i = index - 1; i >= 0; i--) {
-                if (digits.get(i) != 0) {
-                    isAllZero = false;
-                }
-            }
+            builder.append(appendPlace(triplet));
         }
-
         return builder.toString();
     }
 
-
-    public void appendTens(int index, ArrayList<Integer> digits, StringBuilder builder) {
-
-        //Check if values are zero ahead of time
-        boolean tenIsZero = digits.get(index) == 0;
-        boolean oneIsZero = digits.get(index - 1) == 0;
-
-
-        if (digits.get(index) == 10) {
-            //"teen" number
-            builder.append(words.get(digits.get(index) + digits.get(index - 1)));
-
+    public String appendThreeDigits(Triplet triplet) {
+        StringBuilder builder = new StringBuilder();
+        if (!isZero(triplet.getDigitTwo())) {
+            builder.append(words.get(triplet.getDigitTwo()));
+            builder.append(words.get(100));
+            if ((!isZero(triplet.getDigitOne()) || !isZero(triplet.getDigitZero())) && isZero(triplet.getPlace())) {
+                builder.append("and ");
+            }
+            builder.append(appendTwoDigits(triplet));
         } else {
-
-            //not a "teen" number
-            if (!tenIsZero) {
-                builder.append(words.get(digits.get(index)));
-            }
-
-            if (!oneIsZero) {
-                builder.append(words.get(digits.get(index - 1)));
-            }
+            builder.append(appendTwoDigits(triplet));
         }
+        return builder.toString();
     }
 
-    public void appendPlace(int count, int size, StringBuilder builder) {
-        // Use double to round up for correct indexing
-        builder.append(words.get((int) ((Math.ceil((double) size / 3) - count) * 100)));
+    public String appendTwoDigits(Triplet triplet) {
+        StringBuilder builder = new StringBuilder();
+        if (!isZero(triplet.getDigitOne())) {
+            if (triplet.getDigitOne() == 1) {
+                builder.append(words.get((triplet.getDigitOne() * 10) + triplet.getDigitZero()));
+            } else {
+                builder.append(words.get(triplet.getDigitOne() * 10));
+                builder.append(appendOneDigit(triplet));
+            }
+        } else {
+            builder.append(appendOneDigit(triplet));
+        }
+        return builder.toString();
+    }
+
+    public String appendOneDigit(Triplet triplet) {
+        if (!isZero(triplet.getDigitZero())) {
+            return words.get(triplet.getDigitZero());
+        }
+        return "";
+
+    }
+
+    public String appendPlace(Triplet triplet) {
+        if (!isZero(triplet.getPlace()) && (!isZero(triplet.getDigitZero()) || !isZero(triplet.getDigitOne()) || !isZero(triplet.getDigitTwo()))) {
+            return words.get((triplet.getPlace() + 1) * 100);
+        }
+        return "";
+    }
+
+    public boolean isZero(Integer digit) {
+        if (digit == 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
